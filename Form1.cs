@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LimarDemo.Model;
 
 namespace LimarDemo
 {
@@ -82,7 +83,7 @@ namespace LimarDemo
                         File.Copy(filePath, destPath, true);
 
                         // Update database
-                        item.FilePath = destPath;
+                        item.ItemPath = destPath;
                         dbContext.Entry(item).State = EntityState.Modified;
                     }
 
