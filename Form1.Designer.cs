@@ -59,22 +59,22 @@
             this.dataGridViewImages.AllowUserToAddRows = false;
             this.dataGridViewImages.AllowUserToDeleteRows = false;
             this.dataGridViewImages.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewImages.Location = new System.Drawing.Point(138, 90);
+            this.dataGridViewImages.Location = new System.Drawing.Point(138, 115);
             this.dataGridViewImages.Name = "dataGridViewImages";
             this.dataGridViewImages.ReadOnly = true;
-            this.dataGridViewImages.Size = new System.Drawing.Size(375, 150);
+            this.dataGridViewImages.Size = new System.Drawing.Size(375, 200);
             this.dataGridViewImages.TabIndex = 3;
             // 
             // progressBarUpload
             // 
-            this.progressBarUpload.Location = new System.Drawing.Point(138, 262);
+            this.progressBarUpload.Location = new System.Drawing.Point(138, 86);
             this.progressBarUpload.Name = "progressBarUpload";
             this.progressBarUpload.Size = new System.Drawing.Size(294, 23);
             this.progressBarUpload.TabIndex = 4;
             // 
             // btnUpload
             // 
-            this.btnUpload.Location = new System.Drawing.Point(438, 262);
+            this.btnUpload.Location = new System.Drawing.Point(438, 86);
             this.btnUpload.Name = "btnUpload";
             this.btnUpload.Size = new System.Drawing.Size(75, 23);
             this.btnUpload.TabIndex = 5;

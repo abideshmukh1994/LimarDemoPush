@@ -15,11 +15,25 @@ namespace LimarDemo
 {
     public partial class Form1 : Form
     {
+        
         public Form1()
         {
             InitializeComponent();
         }
 
+        private enum FileMatched 
+        {
+            Matched,
+            Unmatched,
+            None
+        }
+
+        public class StockItemImage
+        {
+            public string FileName { get; set; }
+            public string FileNameWithExtension { get; set; }
+            public string FileMatched { get; set; }
+        }
         private void label1_Click(object sender, EventArgs e)
         {
 
@@ -30,6 +44,17 @@ namespace LimarDemo
             
         }
 
+        public void InitializeDataGrid()
+        {
+            dataGridViewImages.Rows.Clear();
+            dataGridViewImages.Columns.Clear();
+            dataGridViewImages.Columns.Add("FileName", "File Name");
+            dataGridViewImages.Columns.Add("FileNameWithExtension", "Full File Name");
+            dataGridViewImages.Columns.Add("FileMatched", "File Matched");
+        }
+
+        private List<StockItemImage> ItemImageFiles = new List<StockItemImage>();
+
         private void btnSelectFolder_Click(object sender, EventArgs e)
         {
             using (var folderDialog = new FolderBrowserDialog())
@@ -39,18 +64,18 @@ namespace LimarDemo
                     txtFolderPath.Text = folderDialog.SelectedPath;
 
                     // Get image files and bind to DataGridView
-                    var imageFiles = Directory.GetFiles(folderDialog.SelectedPath, "*.*")
-                                               .Where(f => f.EndsWith(".jpg") || f.EndsWith(".png") || f.EndsWith(".jpeg"))
-                                               .Select(f => new { FileName = Path.GetFileName(f), FilePath = f })
+                    ItemImageFiles = Directory.GetFiles(folderDialog.SelectedPath, "*.*")
+                                               .Where(imageFile => imageFile.EndsWith(".jpg") || imageFile.EndsWith(".png") || imageFile.EndsWith(".jpeg"))
+                                               .Select(imageFile => new StockItemImage { FileName = Path.GetFileNameWithoutExtension(imageFile), FileNameWithExtension = Path.GetFileName(imageFile), FileMatched = FileMatched.None.ToString() })
                                                .ToList();
 
-                    dataGridViewImages.DataSource = imageFiles;
                 }
             }
         }
 
         private void btnUpload_Click(object sender, EventArgs e)
         {
+            InitializeDataGrid();
             string sourceFolder = txtFolderPath.Text;
             if (string.IsNullOrEmpty(sourceFolder) || !Directory.Exists(sourceFolder))
             {
@@ -58,35 +83,31 @@ namespace LimarDemo
                 return;
             }
 
-            string destinationFolder = Path.Combine(AppContext.BaseDirectory, "UploadedImages");
-            Directory.CreateDirectory(destinationFolder);
-
             using (var dbContext = new AppDbContext())
             {
-                var rows = dataGridViewImages.Rows.Cast<DataGridViewRow>().ToList();
-                int totalFiles = rows.Count;
+                var imageFiles = ItemImageFiles;
+                int totalFiles = imageFiles.Count;
                 int processedFiles = 0;
 
                 progressBarUpload.Value = 0;
                 progressBarUpload.Maximum = totalFiles;
 
-                foreach (var row in rows)
-                {
-                    var fileName = Path.GetFileNameWithoutExtension(row.Cells["FileName"].Value.ToString());
-                    var filePath = row.Cells["FilePath"].Value.ToString();
+                //Get items without file path
+                var itemsWithoutItemImagePath = dbContext.Items.Where(i => i.ItemPath == null);
 
-                    // Match file name with database item
-                    var item = dbContext.Items.FirstOrDefault(i => i.ItemName == fileName);
+                foreach (var imageFile in imageFiles)
+                {
+                    // Match file name with fetched item
+                    var item = itemsWithoutItemImagePath.FirstOrDefault(i => i.ItemName == imageFile.FileName);
                     if (item != null)
                     {
-                        string destPath = Path.Combine(destinationFolder, Path.GetFileName(filePath));
-                        File.Copy(filePath, destPath, true);
-
                         // Update database
-                        item.ItemPath = destPath;
+                        item.ItemPath = imageFile.FileNameWithExtension;
                         dbContext.Entry(item).State = EntityState.Modified;
                     }
 
+                    imageFile.FileMatched = item != null ? FileMatched.Matched.ToString() : FileMatched.Unmatched.ToString();
+                    dataGridViewImages.Rows.Add(imageFile.FileName, imageFile.FileNameWithExtension, imageFile.FileMatched);
                     // Update progress
                     processedFiles++;
                     progressBarUpload.Value = processedFiles;
@@ -94,6 +115,7 @@ namespace LimarDemo
                     // Refresh the progress bar to reflect updates
                     progressBarUpload.Refresh();
                 }
+
 
                 dbContext.SaveChanges();
             }
